@@ -106,12 +106,14 @@
     checkCompletion(); // Check if goal is completed for the selected date
   }
 
-  // Check if the goal is completed (e.g., if any checkbox is checked)
+  // Check if the goal is completed
   function checkCompletion() {
-    // Check if any checkbox input is checked (or define your own logic)
-    isCompleted = Object.entries(localValues).some(([label, value]) => {
-      return inputTypes[label] === 'checkbox' && value === true;
-    });
+    let currentConfig = JSON.parse(localStorage.getItem(goalType)) || {};
+    let currentDateConfig = currentConfig[selectedDate] || {};
+
+    // Set isCompleted based on the "did you complete the goal" value
+    isCompleted = currentDateConfig["Did you accomplish your goal?"] || false;
+
   }
 
   // Handle date change
