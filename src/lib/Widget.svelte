@@ -156,78 +156,87 @@
 
 <!-- Expanded View -->
 {#if isExpanded}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="relative p-4 border border-gray-300 rounded-lg w-96 bg-white shadow-lg" style="background-color: {color}">
-      <h3 class="text-xl font-bold mb-4">{goalType}</h3>
-      <div class="absolute top-2 right-2 flex items-center space-x-2">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="relative p-4 border border-gray-300 rounded-lg bg-white shadow-lg" style="background-color: {color}; min-width: 320px; max-width: 95%; width: auto; height: auto;">
+    
+    <!-- Title (goalType) placed above buttons -->
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-xl font-bold break-words">{goalType}</h3> <!-- Goal title -->
+      <div class="flex items-center space-x-2"> <!-- Moved buttons right next to each other -->
         <input type="color" id="color" class="cursor-pointer" bind:value={color} on:change={handleColorChange} title="Change color"/>
         <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition" on:click={handleDelete} title="Delete">Delete</button>
         <button class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition" on:click={toggleExpand} title="Close">Close</button>
       </div>
+    </div>
 
-      <div class="mb-4">
-        <h4 class="font-bold mb-2">Select a Date:</h4>
-        <input
-          type="date"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          value={selectedDate}
-          on:change={handleDateChange}
-        />
-      </div>
+    <!-- Date Picker Section -->
+    <div class="mb-4">
+      <h4 class="font-bold mb-2">Select a Date:</h4>
+      <input
+        type="date"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+        value={selectedDate}
+        on:change={handleDateChange}
+      />
+    </div>
 
-      <form on:submit={handleSave} class="space-y-4 mb-6">
-        {#each inputs as { type, label, min, max }}
-          <div class="space-y-1">
-            <label class="block font-medium">{label}</label>
-            {#if type === 'checkbox'}
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  placeholder={label}
-                  class="mr-2"
-                  checked={localValues[label] || false}
-                  on:input={handleInputChange}
-                />
-              </div>
-            {:else if type === 'range'}
-              <div class="flex flex-col space-y-1">
-                <input
-                  type="range"
-                  min={min || 0}
-                  max={max || 100}
-                  value={localValues[label] || (min || 0)}
-                  class="w-full"
-                  on:input={handleInputChange}
-                  placeholder={label}
-                />
-                <div class="flex justify-between text-sm">
-                  <span>Min: {min || 0}</span>
-                  <span>Value: {localValues[label] || (min || 0)}</span>
-                  <span>Max: {max || 100}</span>
-                </div>
-              </div>
-            {:else}
+    <!-- Input Form -->
+    <form on:submit={handleSave} class="space-y-4 mb-6">
+      {#each inputs as { type, label, min, max }}
+        <div class="space-y-1">
+          <label class="block font-medium">{label}</label>
+          {#if type === 'checkbox'}
+            <div class="flex items-center">
               <input
-                type={type} 
+                type="checkbox"
                 placeholder={label}
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                value={localValues[label] || ''}
+                class="mr-2"
+                checked={localValues[label] || false}
                 on:input={handleInputChange}
               />
-            {/if}
-          </div>
-        {/each}
-      
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-          Save
-        </button>
-      </form>
-
-      {#if showNotification}
-        <div class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          Changes saved!
+            </div>
+          {:else if type === 'range'}
+            <div class="flex flex-col space-y-1">
+              <input
+                type="range"
+                min={min || 0}
+                max={max || 100}
+                value={localValues[label] || (min || 0)}
+                class="w-full"
+                on:input={handleInputChange}
+                placeholder={label}
+              />
+              <div class="flex justify-between text-sm">
+                <span>Min: {min || 0}</span>
+                <span>Value: {localValues[label] || (min || 0)}</span>
+                <span>Max: {max || 100}</span>
+              </div>
+            </div>
+          {:else}
+            <input
+              type={type} 
+              placeholder={label}
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              value={localValues[label] || ''}
+              on:input={handleInputChange}
+            />
+          {/if}
         </div>
-      {/if}
-    </div>
+      {/each}
+      
+      <!-- Save Button -->
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+        Save
+      </button>
+    </form>
+
+    <!-- Save Notification -->
+    {#if showNotification}
+      <div class="absolute top-2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        Changes saved!
+      </div>
+    {/if}
   </div>
+</div>
+
 {/if}
