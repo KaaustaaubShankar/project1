@@ -160,9 +160,9 @@
   <div class="relative p-4 border border-gray-300 rounded-lg bg-white shadow-lg" style="background-color: {color}; min-width: 320px; max-width: 95%; width: auto; height: auto;">
     
     <!-- Title (goalType) placed above buttons -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-bold break-words">{goalType}</h3> <!-- Goal title -->
-      <div class="flex items-center space-x-2"> <!-- Moved buttons right next to each other -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center space-x-3"> <!-- Moved buttons right next to each other -->
+        <h3 class="text-xl font-bold break-words">{goalType}</h3> <!-- Goal title -->
         <input type="color" id="color" class="cursor-pointer" bind:value={color} on:change={handleColorChange} title="Change color"/>
         <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition" on:click={handleDelete} title="Delete">Delete</button>
         <button class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition" on:click={toggleExpand} title="Close">Close</button>
