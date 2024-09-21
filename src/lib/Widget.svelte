@@ -13,7 +13,9 @@
   let localValues = {}; // Object to store current input values
   let showNotification = false; // State to control notification visibility
   let inputTypes = {}; // Object to store input types for each label
+  let isCompleted = false; // Track if the goal is completed for the day
 
+  // Load saved color from localStorage
   function loadSavedColor() {
     const savedWidgets = JSON.parse(localStorage.getItem('widgets')) || [];
     const currentWidget = savedWidgets.find(widget => widget.goalType === goalType);
@@ -22,12 +24,12 @@
     }
   }
 
+  // Load input types and inputs from localStorage
   function loadInputTypes() {
     const savedWidgets = JSON.parse(localStorage.getItem('widgets')) || [];
     const currentWidget = savedWidgets.find(widget => widget.goalType === goalType);
 
     if (currentWidget && currentWidget.inputs) {
-      // Map input labels to their types
       inputTypes = currentWidget.inputs.reduce((acc, input) => {
         acc[input.label] = input.type;
         return acc;
@@ -36,6 +38,7 @@
     }
   }
 
+  // Save data for the selected date and update localStorage
   function handleSave(event) {
     event.preventDefault();
     if (!selectedDate) {
@@ -58,8 +61,11 @@
     setTimeout(() => {
       showNotification = false;
     }, 2000); // Notification disappears after 2 seconds
+
+    checkCompletion(); // Check if goal is completed after saving
   }
 
+  // Handle color change and update localStorage
   function handleColorChange(event) {
     color = event.target.value;
 
@@ -71,6 +77,7 @@
     }
   }
 
+  // Handle widget deletion
   function handleDelete() {
     if (confirm('Are you sure you want to delete this widget?')) {
       let savedWidgets = JSON.parse(localStorage.getItem('widgets')) || [];
@@ -84,50 +91,70 @@
     }
   }
 
+  // Toggle widget expansion
   function toggleExpand() {
     isExpanded = !isExpanded;
   }
 
+  // Load past entries for the selected date
   function loadPastEntries() {
     pastEntries = JSON.parse(localStorage.getItem(goalType)) || {};
-    // Update entriesForDate if a date is selected
     if (selectedDate) {
       entriesForDate = pastEntries[selectedDate] || {};
       localValues = { ...entriesForDate }; // Populate local values with existing data
     }
+    checkCompletion(); // Check if goal is completed for the selected date
   }
 
+  // Check if the goal is completed (e.g., if any checkbox is checked)
+  function checkCompletion() {
+    // Check if any checkbox input is checked (or define your own logic)
+    isCompleted = Object.entries(localValues).some(([label, value]) => {
+      return inputTypes[label] === 'checkbox' && value === true;
+    });
+  }
+
+  // Handle date change
   function handleDateChange(event) {
     selectedDate = dayjs(event.target.value).format('YYYY-MM-DD');
-    loadPastEntries();
+    loadPastEntries(); // Load entries for the new date
   }
 
+  // Handle input change (for checkbox, range, or text input)
   function handleInputChange(event) {
     const { placeholder, value, type, checked } = event.target;
 
-    // For checkboxes, we need to save `checked` state, not `value`
     if (type === 'checkbox') {
       localValues[placeholder] = checked;
     } else {
       localValues[placeholder] = value;
     }
+    checkCompletion(); // Check completion after input change
   }
 
   onMount(() => {
     loadSavedColor();
     loadInputTypes(); // Load input types from local storage
     selectedDate = dayjs().format('YYYY-MM-DD'); // Set default date to today
-    loadPastEntries();
+    loadPastEntries(); // Load past entries for today
   });
 </script>
 
+<!-- Widget Display -->
 <div class="relative p-2 border border-gray-300 rounded-lg w-80 h-24 flex flex-col justify-center items-center" style="background-color: {color}">
   <h3 class="text-lg font-bold truncate">{goalType}</h3>
+  
+  <!-- Show checkmark if goal is completed -->
+  {#if isCompleted}
+    <span class="absolute top-2 right-2 text-green-500 text-2xl">✔</span>
+  {/if}
+
   <button class="absolute bottom-2 right-2 bg-blue-600 text-white text-lg w-8 h-8 rounded-full hover:bg-blue-700 transition" on:click={toggleExpand}>
     +
   </button>
 </div>
 
+<!-- Expanded View -->
 {#if isExpanded}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="relative p-4 border border-gray-300 rounded-lg w-96 bg-white shadow-lg" style="background-color: {color}">
@@ -177,7 +204,6 @@
                   <span>Min: {min || 0}</span>
                   <span>Value: {localValues[label] || (min || 0)}</span>
                   <span>Max: {max || 100}</span>
-                  
                 </div>
               </div>
             {:else}
