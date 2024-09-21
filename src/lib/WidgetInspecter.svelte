@@ -89,15 +89,13 @@
   });
 </script>
 
-<!-- Tailwind Styles -->
-<div class="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-6xl mx-auto h-full flex flex-col">
-  {#if error}
-    <p class="text-red-500 font-bold">{error}</p>
-  {/if}
-  {#if widgets.length > 0}
-    <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-x-5 gap-y-4 mt-4 justify-center mx-auto">
+{#if widgets.length > 0}
+  <div class="p-6 border border-gray-300 rounded-lg bg-gray-50 max-w-6xl mx-auto h-full flex flex-col">
+    <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-4 mt-4 mx-auto w-full">
       {#each getPagedWidgets(currentPage) as widget, index (widget.id)}
-        <Widget goalType={widget.goalType} color={widget.color} inputs={widget.inputs} />
+        <div class="w-full">
+          <Widget goalType={widget.goalType} color={widget.color} inputs={widget.inputs} />
+        </div>
       {/each}
     </div>
 
@@ -113,7 +111,13 @@
         Next
       </button>
     </div>
-  {:else}
-    <h1 class="text-gray-500 text-center">No widgets configured.</h1>
-  {/if}
-</div>
+  </div>
+{:else}
+  <div class="bg-gray-50 flex-grow flex items-center justify-center h-full">
+    <div class="bg-gray-200 p-8 rounded-lg w-full max-w-lg text-center">
+      <h1 class="text-red-500 font-bold">No widgets configured.</h1>
+    </div>
+  </div>
+{/if}
+
+
