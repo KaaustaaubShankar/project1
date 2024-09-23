@@ -147,7 +147,7 @@
   
   <!-- Show checkmark if goal is completed -->
   {#if isCompleted}
-    <span class="absolute top-2 right-2 text-green-500 text-2xl">✔</span>
+    <span class="absolute top-2 left-2 text-green-500 text-2xl">✔</span>
   {/if}
 
   <!-- Button Container for horizontal alignment -->
