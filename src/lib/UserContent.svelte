@@ -70,13 +70,18 @@
   <p class="text-gray-700">Current Date/Time: {currentDate.toLocaleString()}</p>
   <p class="text-gray-700">Days Active: {daysActive}</p>
 
-  <!-- Progress Bar -->
-  <div class="flex flex-col items-center mt-4">
-    <div class="relative w-full max-w-xs">
-      <div class="w-full h-4 bg-gray-200 rounded-full">
-        <div class="h-full bg-blue-600 rounded-full" style="width: {progressPercent}%"></div>
+  <!-- Progress Bar Section -->
+  <div class="flex flex-col mt-4">
+    <label class="text-gray-700 mb-2">Today's Progress: </label>
+    <div class="flex items-center w-full max-w-xs">
+      <div class="relative w-full">
+        <div class="w-full h-4 bg-gray-200 rounded-full">
+          <div class="h-full bg-blue-600 rounded-full" style="width: {progressPercent}%"></div>
+        </div>
       </div>
-      <span class="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">{Math.round(progressPercent)}%</span>
+      <span class="ml-2 text-xs font-medium text-black">
+        {Math.round(progressPercent)}%
+      </span>
     </div>
   </div>
 </div>
