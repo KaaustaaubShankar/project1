@@ -79,12 +79,11 @@
 
   // Handle widget deletion
   function handleDelete() {
-    if (confirm('Are you sure you want to delete this widget?')) {
+    if (confirm('Are you sure you want to delete this activity tracker?')) {
       let savedWidgets = JSON.parse(localStorage.getItem('widgets')) || [];
       savedWidgets = savedWidgets.filter(widget => widget.goalType !== goalType);
       localStorage.setItem('widgets', JSON.stringify(savedWidgets));
       localStorage.removeItem(goalType);
-      pastEntries = {};
       entriesForDate = {}; // Clear entries for the deleted widget
       loadSavedColor();
       inputs = []; // Clear inputs after deletion
@@ -151,25 +150,39 @@
     <span class="absolute top-2 right-2 text-green-500 text-2xl">✔</span>
   {/if}
 
-  <button class="absolute bottom-2 right-2 bg-blue-600 text-white text-lg w-8 h-8 rounded-full hover:bg-blue-700 transition" on:click={toggleExpand}>
-    +
-  </button>
+  <!-- Button Container for horizontal alignment -->
+  <div class="absolute top-2 right-2 flex space-x-2">
+    <!-- Delete button with trash icon -->
+    <button class="text-red-500 hover:text-red-700 transition" on:click={handleDelete} title="Delete">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-1 12a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7m5-4h4m-4 0a2 2 0 00-2 2v1h8V5a2 2 0 00-2-2m-4 0h4" />
+      </svg>
+    </button>
+    <!-- Open button -->
+    <button class="bg-blue-600 text-white text-lg w-8 h-8 rounded-full hover:bg-blue-700 transition" on:click={toggleExpand}>
+      +
+    </button>
+  </div>
 </div>
+
+
 
 <!-- Expanded View -->
 {#if isExpanded}
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
   <div class="relative p-4 border border-gray-300 rounded-lg bg-white shadow-lg" style="background-color: {color}; min-width: 320px; max-width: 95%; width: auto; height: auto;">
     
-    <!-- Title (goalType) placed above buttons -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center space-x-3"> <!-- Moved buttons right next to each other -->
-        <h3 class="text-xl font-bold break-words">{goalType}</h3> <!-- Goal title -->
-        <input type="color" id="color" class="cursor-pointer" bind:value={color} on:change={handleColorChange} title="Change color"/>
-        <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition" on:click={handleDelete} title="Delete">Delete</button>
-        <button class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition" on:click={toggleExpand} title="Close">Close</button>
-      </div>
+  <!-- Title (goalType) placed above buttons -->
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-xl font-bold break-words">{goalType}</h3> <!-- Goal title -->
+
+    <!-- Flex container for the color picker and close button -->
+    <div class="flex items-center space-x-3">
+      <input type="color" id="color" class="cursor-pointer" bind:value={color} on:change={handleColorChange} title="Change color"/>
+      <button class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition" on:click={toggleExpand} title="Close">Close</button>
     </div>
+  </div>
+
 
     <!-- Date Picker Section -->
     <div class="mb-4">
