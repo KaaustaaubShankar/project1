@@ -23,8 +23,8 @@
 
     // Default inputs for each widget type
     const defaultInputs = {
-        sleep: [{ type: 'number', label: 'Hours of Sleep', min: 0 }],
-        water: [{ type: 'number', label: 'Liters of Water', min: 0 }],
+        sleep: [{ type: "number", label: "Hours of Sleep", min: 0 }],
+        water: [{ type: "number", label: "Liters of Water", min: 0 }],
     };
 
     // Load widget configurations from local storage
@@ -44,7 +44,10 @@
     function saveWidget() {
         // Validate the form fields
         if (!widgetType || !goalType || !color) {
-            showNotificationMessage("Please fill in all required fields.", "red");
+            showNotificationMessage(
+                "Please fill in all required fields.",
+                "red",
+            );
             return;
         }
 
@@ -54,7 +57,7 @@
             goalType,
             inputs: [...(defaultInputs[widgetType] || []), ...inputs],
             color,
-            notes
+            notes,
         };
 
         if (currentWidgetIndex === null) {
@@ -68,24 +71,31 @@
         addGoalAccomplishedCheckbox();
         addNotesInput();
         resetForm();
-        dispatch('local-storage-change');
+        dispatch("local-storage-change");
 
         // Show success notification
         showNotificationMessage("Created widget!", "green");
         currentPage = 2;
-        
     }
 
     // Add "Goal Accomplished" checkbox to the widget in local storage
     function addGoalAccomplishedCheckbox() {
-        widgets = widgets.map(widget => {
-            if (widget.widgetType === 'goal' || widget.widgetType === 'habit' || widget.widgetType === 'sleep' || widget.widgetType === 'water') {
-                // Add "Goal Accomplished" checkbox if it's not already included
-                const hasGoalAccomplished = widget.inputs.some(input => input.label === 'Did you accomplish your goal?');
-                if (!hasGoalAccomplished) {
-                    widget.inputs = [...widget.inputs, { type: 'checkbox', label: 'Did you accomplish your goal?', checked: false }];
-                }
+        widgets = widgets.map((widget) => {
+            // Add "Goal Accomplished" checkbox if it's not already included
+            const hasGoalAccomplished = widget.inputs.some(
+                (input) => input.label === "Did you accomplish your goal?",
+            );
+            if (!hasGoalAccomplished) {
+                widget.inputs = [
+                    ...widget.inputs,
+                    {
+                        type: "checkbox",
+                        label: "Did you accomplish your goal?",
+                        checked: false,
+                    },
+                ];
             }
+
             return widget;
         });
         saveConfigs();
@@ -93,11 +103,20 @@
 
     // Add "Notes" input to the widget in local storage
     function addNotesInput() {
-        widgets = widgets.map(widget => {
+        widgets = widgets.map((widget) => {
             // Add a "Notes" textarea input if it's not already included
-            const hasNotesInput = widget.inputs.some(input => input.label === 'notes');
+            const hasNotesInput = widget.inputs.some(
+                (input) => input.label === "notes",
+            );
             if (!hasNotesInput) {
-                widget.inputs = [...widget.inputs, { type: 'textarea', label: 'notes', value: widget.notes || "" }];
+                widget.inputs = [
+                    ...widget.inputs,
+                    {
+                        type: "textarea",
+                        label: "notes",
+                        value: widget.notes || "",
+                    },
+                ];
             }
             return widget;
         });
@@ -135,7 +154,10 @@
     // Add a new input field
     function addInput() {
         if (newLabel) {
-            inputs = [...inputs, { type: newInputType, label: newLabel, min, max, options }];
+            inputs = [
+                ...inputs,
+                { type: newInputType, label: newLabel, min, max, options },
+            ];
             showNotificationMessage(`Added input: "${newLabel}"`, "green");
             newLabel = "";
             min = "";
@@ -149,6 +171,11 @@
     // Remove an input field
     function removeInput(index) {
         inputs = inputs.filter((_, i) => i !== index);
+        // Update the current widget in the widgets array
+        if (currentWidgetIndex !== null) {
+            widgets[currentWidgetIndex].inputs = inputs;
+            saveConfigs(); // Save updated widgets to local storage
+        }
     }
 
     onMount(() => {
@@ -159,10 +186,15 @@
             const widget = widgets[currentWidgetIndex];
             widgetType = widget.widgetType;
             goalType = widget.goalType;
-            inputs = widget.inputs.filter(input => !defaultInputs[widget.widgetType]?.some(defaultInput => defaultInput.label === input.label));
+            inputs = widget.inputs.filter(
+                (input) =>
+                    !defaultInputs[widget.widgetType]?.some(
+                        (defaultInput) => defaultInput.label === input.label,
+                    ),
+            );
             color = widget.color;
             notes = widget.notes || "";
-        } else if (widgetType === 'sleep' || widgetType === 'water') {
+        } else if (widgetType === "sleep" || widgetType === "water") {
             // Set default inputs if creating a new widget
             inputs = [];
         }
@@ -182,23 +214,30 @@
     }
 </script>
 
-<div class="p-4 bg-white rounded-xl shadow-md space-y-4 overflow-auto h-full flex flex-col relative">
+<div
+    class="p-4 bg-white rounded-xl shadow-md space-y-4 overflow-auto h-full flex flex-col relative"
+>
     <h2 class="text-lg font-semibold mb-4">
         {currentWidgetIndex === null ? "Add New Widget" : "Edit Widget"}
     </h2>
 
     <!-- Notification -->
     {#if showNotification}
-        <div 
+        <div
             class="absolute top-0 left-0 w-full px-4 py-2 text-white text-center rounded-md transition-all duration-300"
-            style="background-color: {notificationColor}; transform: translateY({showNotification ? '0%' : '-100%'})">
+            style="background-color: {notificationColor}; transform: translateY({showNotification
+                ? '0%'
+                : '-100%'})"
+        >
             {notificationMessage}
         </div>
     {/if}
 
     <div class="space-y-4 flex-grow">
         <div>
-            <label for="widgetType" class="block text-sm font-medium">Widget Type:</label>
+            <label for="widgetType" class="block text-sm font-medium"
+                >Widget Type:</label
+            >
             <select
                 id="widgetType"
                 bind:value={widgetType}
@@ -217,7 +256,9 @@
 
         {#if widgetType}
             <div>
-                <label for="goalType" class="block text-sm font-medium">Goal Type:</label>
+                <label for="goalType" class="block text-sm font-medium"
+                    >Goal Type:</label
+                >
                 <input
                     id="goalType"
                     type="text"
@@ -229,10 +270,12 @@
             </div>
         {/if}
 
-        {#if widgetType === 'habit' || widgetType === 'goal' || widgetType === 'learning' || widgetType === 'sleep' || widgetType === 'water'}
+        {#if widgetType === "habit" || widgetType === "goal" || widgetType === "learning" || widgetType === "sleep" || widgetType === "water"}
             <div class="flex items-center space-x-4">
                 <div class="flex-1">
-                    <label for="newInputType" class="block text-sm font-medium">Input Type:</label>
+                    <label for="newInputType" class="block text-sm font-medium"
+                        >Input Type:</label
+                    >
                     <select
                         id="newInputType"
                         bind:value={newInputType}
@@ -248,7 +291,9 @@
                 </div>
 
                 <div class="flex-1">
-                    <label for="newLabel" class="block text-sm font-medium">Input Label:</label>
+                    <label for="newLabel" class="block text-sm font-medium"
+                        >Input Label:</label
+                    >
                     <input
                         id="newLabel"
                         type="text"
@@ -267,7 +312,7 @@
             </div>
         {/if}
 
-        {#if newInputType === 'range'}
+        {#if newInputType === "range"}
             <div class="mt-4">
                 <label for="min" class="block text-sm font-medium">Min:</label>
                 <input
@@ -277,7 +322,9 @@
                     placeholder="Minimum value"
                     class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
                 />
-                <label for="max" class="block text-sm font-medium mt-2">Max:</label>
+                <label for="max" class="block text-sm font-medium mt-2"
+                    >Max:</label
+                >
                 <input
                     id="max"
                     type="number"
@@ -288,9 +335,11 @@
             </div>
         {/if}
 
-        {#if newInputType === 'select'}
+        {#if newInputType === "select"}
             <div class="mt-4">
-                <label for="options" class="block text-sm font-medium">Options (comma separated):</label>
+                <label for="options" class="block text-sm font-medium"
+                    >Options (comma separated):</label
+                >
                 <input
                     id="options"
                     type="text"
@@ -306,13 +355,13 @@
             <div class="mt-4">
                 <h3 class="text-sm font-semibold">Inputs:</h3>
                 <ul class="list-disc list-inside">
-                    {#each (defaultInputs[widgetType] || []) as input}
+                    {#each defaultInputs[widgetType] || [] as input}
                         <li>
                             {input.label} - {input.type}
-                            {#if input.type === 'range'}
+                            {#if input.type === "range"}
                                 (Min: {input.min} Max: {input.max})
                             {/if}
-                            {#if input.type === 'select'}
+                            {#if input.type === "select"}
                                 (Options: {input.options})
                             {/if}
                         </li>
@@ -320,13 +369,16 @@
                     {#each inputs as input, index}
                         <li>
                             {input.label} - {input.type}
-                            {#if input.type === 'range'}
+                            {#if input.type === "range"}
                                 (Min: {input.min} Max: {input.max})
                             {/if}
-                            {#if input.type === 'select'}
+                            {#if input.type === "select"}
                                 (Options: {input.options})
                             {/if}
-                            <button on:click={() => removeInput(index)} class="text-red-500 ml-2">Remove</button>
+                            <button
+                                on:click={() => removeInput(index)}
+                                class="text-red-500 ml-2">Remove</button
+                            >
                         </li>
                     {/each}
                 </ul>
@@ -334,7 +386,9 @@
         {/if}
 
         <div class="mt-4">
-            <label for="color" class="block text-sm font-medium">Widget Color:</label>
+            <label for="color" class="block text-sm font-medium"
+                >Widget Color:</label
+            >
             <input
                 id="color"
                 type="color"
