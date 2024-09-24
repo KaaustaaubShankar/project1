@@ -1,9 +1,11 @@
 <script>
-    import { onMount, createEventDispatcher } from "svelte";
+    import { onMount } from "svelte";
+    import { widgets, loadWidgets, saveWidgets } from './store.js';
+    import { get } from 'svelte/store';
+    import { createEventDispatcher } from "svelte";
+
     const dispatch = createEventDispatcher();
-    export let currentPage;
-    let widgets = [];
-    let currentWidgetIndex = null;
+    export let currentWidgetIndex = null;
     let widgetType = "";
     let goalType = "";
     let inputs = [];
@@ -27,18 +29,10 @@
         water: [{ type: "number", label: "Liters of Water", min: 0 }],
     };
 
-    // Load widget configurations from local storage
-    function loadConfigs() {
-        const savedWidgets = localStorage.getItem("widgets");
-        if (savedWidgets) {
-            widgets = JSON.parse(savedWidgets);
-        }
-    }
-
-    // Save widget configurations to local storage
-    function saveConfigs() {
-        localStorage.setItem("widgets", JSON.stringify(widgets));
-    }
+    // Load widget configurations from store
+    onMount(() => {
+        loadWidgets(); // Load widgets from localStorage
+    });
 
     // Add or update a widget configuration
     function saveWidget() {
@@ -60,14 +54,18 @@
             notes,
         };
 
+        // Fetch the current widgets from the store
+        const currentWidgets = get(widgets);
+
         if (currentWidgetIndex === null) {
-            widgets = [...widgets, widget];
+            widget.id = currentWidgets.length; // Assign an ID based on length
+            currentWidgets.push(widget);
         } else {
-            widgets[currentWidgetIndex] = widget;
-            widgets = [...widgets];
+            currentWidgets[currentWidgetIndex] = { ...currentWidgets[currentWidgetIndex], ...widget };
         }
 
-        saveConfigs();
+        saveWidgets(currentWidgets); // Save updated widgets to local storage
+
         addGoalAccomplishedCheckbox();
         addNotesInput();
         resetForm();
@@ -75,52 +73,42 @@
 
         // Show success notification
         showNotificationMessage("Created widget!", "green");
-        currentPage = 2;
     }
 
-    // Add "Goal Accomplished" checkbox to the widget in local storage
+    // Add "Goal Accomplished" checkbox to the widget in store
     function addGoalAccomplishedCheckbox() {
-        widgets = widgets.map((widget) => {
-            // Add "Goal Accomplished" checkbox if it's not already included
+        const currentWidgets = get(widgets);
+        currentWidgets.forEach((widget) => {
             const hasGoalAccomplished = widget.inputs.some(
                 (input) => input.label === "Did you accomplish your goal?",
             );
             if (!hasGoalAccomplished) {
-                widget.inputs = [
-                    ...widget.inputs,
-                    {
-                        type: "checkbox",
-                        label: "Did you accomplish your goal?",
-                        checked: false,
-                    },
-                ];
+                widget.inputs.push({
+                    type: "checkbox",
+                    label: "Did you accomplish your goal?",
+                    checked: false,
+                });
             }
-
-            return widget;
         });
-        saveConfigs();
+        saveWidgets(currentWidgets); // Save updated widgets to local storage
     }
 
-    // Add "Notes" input to the widget in local storage
+    // Add "Notes" input to the widget in store
     function addNotesInput() {
-        widgets = widgets.map((widget) => {
-            // Add a "Notes" textarea input if it's not already included
+        const currentWidgets = get(widgets);
+        currentWidgets.forEach((widget) => {
             const hasNotesInput = widget.inputs.some(
                 (input) => input.label === "notes",
             );
             if (!hasNotesInput) {
-                widget.inputs = [
-                    ...widget.inputs,
-                    {
-                        type: "textarea",
-                        label: "notes",
-                        value: widget.notes || "",
-                    },
-                ];
+                widget.inputs.push({
+                    type: "textarea",
+                    label: "notes",
+                    value: widget.notes || "",
+                });
             }
-            return widget;
         });
-        saveConfigs();
+        saveWidgets(currentWidgets); // Save updated widgets to local storage
     }
 
     // Show notification message with color
@@ -173,77 +161,47 @@
         inputs = inputs.filter((_, i) => i !== index);
         // Update the current widget in the widgets array
         if (currentWidgetIndex !== null) {
-            widgets[currentWidgetIndex].inputs = inputs;
-            saveConfigs(); // Save updated widgets to local storage
+            const currentWidgets = get(widgets);
+            currentWidgets[currentWidgetIndex].inputs = inputs;
+            saveWidgets(currentWidgets); // Save updated widgets to local storage
         }
     }
 
-    onMount(() => {
-        loadConfigs();
-
-        // Initialize form with selected widget data if editing
-        if (currentWidgetIndex !== null) {
-            const widget = widgets[currentWidgetIndex];
-            widgetType = widget.widgetType;
-            goalType = widget.goalType;
-            inputs = widget.inputs.filter(
-                (input) =>
-                    !defaultInputs[widget.widgetType]?.some(
-                        (defaultInput) => defaultInput.label === input.label,
-                    ),
-            );
-            color = widget.color;
-            notes = widget.notes || "";
-        } else if (widgetType === "sleep" || widgetType === "water") {
-            // Set default inputs if creating a new widget
-            inputs = [];
-        }
-
-        // Listen for changes to local storage
-        window.addEventListener("storage", handleStorageChange);
-
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-        };
-    });
-
-    function handleStorageChange(event) {
-        if (event.storageArea === localStorage) {
-            loadConfigs();
-        }
+    // Initialize form with selected widget data if editing
+    if (currentWidgetIndex !== null) {
+        const currentWidgets = get(widgets);
+        const widget = currentWidgets[currentWidgetIndex];
+        widgetType = widget.widgetType;
+        goalType = widget.goalType;
+        // Include default inputs when editing
+        inputs = widget.inputs.filter(
+            (input) =>
+                !defaultInputs[widget.widgetType]?.some(
+                    (defaultInput) => defaultInput.label === input.label,
+                ),
+        );
+        color = widget.color;
+        notes = widget.notes || "";
     }
 </script>
 
-<div
-    class="p-4 bg-white rounded-xl shadow-md space-y-4 overflow-auto h-full flex flex-col relative"
->
+<div class="p-4 bg-white rounded-xl shadow-md space-y-4 overflow-auto h-full flex flex-col relative">
     <h2 class="text-lg font-semibold mb-4">
         {currentWidgetIndex === null ? "Add New Widget" : "Edit Widget"}
     </h2>
 
     <!-- Notification -->
     {#if showNotification}
-        <div
-            class="absolute top-0 left-0 w-full px-4 py-2 text-white text-center rounded-md transition-all duration-300"
-            style="background-color: {notificationColor}; transform: translateY({showNotification
-                ? '0%'
-                : '-100%'})"
-        >
+        <div class="absolute top-0 left-0 w-full px-4 py-2 text-white text-center rounded-md transition-all duration-300"
+            style="background-color: {notificationColor}; transform: translateY({showNotification ? '0%' : '-100%'})">
             {notificationMessage}
         </div>
     {/if}
 
     <div class="space-y-4 flex-grow">
         <div>
-            <label for="widgetType" class="block text-sm font-medium"
-                >Widget Type:</label
-            >
-            <select
-                id="widgetType"
-                bind:value={widgetType}
-                class="w-full h-10 p-2 border border-gray-300 rounded-md"
-                required
-            >
+            <label for="widgetType" class="block text-sm font-medium">Widget Type:</label>
+            <select id="widgetType" bind:value={widgetType} class="w-full h-10 p-2 border border-gray-300 rounded-md" required>
                 <option value="">Select a type</option>
                 <option value="habit">Habit Tracker</option>
                 <option value="goal">Goal Tracker</option>
@@ -256,31 +214,17 @@
 
         {#if widgetType}
             <div>
-                <label for="goalType" class="block text-sm font-medium"
-                    >Goal Type:</label
-                >
-                <input
-                    id="goalType"
-                    type="text"
-                    required
-                    bind:value={goalType}
-                    placeholder="Enter goal type"
-                    class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-                />
+                <label for="goalType" class="block text-sm font-medium">Goal Type:</label>
+                <input id="goalType" type="text" required bind:value={goalType} placeholder="Enter goal type"
+                    class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200" />
             </div>
         {/if}
 
-        {#if widgetType === "habit" || widgetType === "goal" || widgetType === "learning" || widgetType === "sleep" || widgetType === "water"}
+        {#if ["habit", "goal", "learning", "sleep", "water"].includes(widgetType)}
             <div class="flex items-center space-x-4">
                 <div class="flex-1">
-                    <label for="newInputType" class="block text-sm font-medium"
-                        >Input Type:</label
-                    >
-                    <select
-                        id="newInputType"
-                        bind:value={newInputType}
-                        class="w-full h-10 p-2 border border-gray-300 rounded-md"
-                    >
+                    <label for="newInputType" class="block text-sm font-medium">Input Type:</label>
+                    <select id="newInputType" bind:value={newInputType} class="w-full h-10 p-2 border border-gray-300 rounded-md">
                         <option value="text">Short Text</option>
                         <option value="textarea">Long Text</option>
                         <option value="number">Number</option>
@@ -291,121 +235,63 @@
                 </div>
 
                 <div class="flex-1">
-                    <label for="newLabel" class="block text-sm font-medium"
-                        >Input Label:</label
-                    >
-                    <input
-                        id="newLabel"
-                        type="text"
-                        bind:value={newLabel}
-                        placeholder="Input label"
-                        class="w-full h-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-                    />
+                    <label for="newLabel" class="block text-sm font-medium">Input Label:</label>
+                    <input id="newLabel" type="text" bind:value={newLabel} placeholder="Input label"
+                        class="w-full h-10 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200" />
                 </div>
 
                 <div>
-                    <button
-                        class="h-10 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                        on:click={addInput}>Add</button
-                    >
+                    <button class="h-10 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600" on:click={addInput}>Add</button>
                 </div>
             </div>
         {/if}
 
         {#if newInputType === "range"}
             <div class="mt-4">
-                <label for="min" class="block text-sm font-medium">Min:</label>
-                <input
-                    id="min"
-                    type="number"
-                    bind:value={min}
-                    placeholder="Minimum value"
-                    class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-                />
-                <label for="max" class="block text-sm font-medium mt-2"
-                    >Max:</label
-                >
-                <input
-                    id="max"
-                    type="number"
-                    bind:value={max}
-                    placeholder="Maximum value"
-                    class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-                />
+                <label for="min" class="block text-sm font-medium">Min Value:</label>
+                <input id="min" type="number" bind:value={min} placeholder="Minimum value" class="w-full h-10 p-2 border border-gray-300 rounded-md" />
+            </div>
+            <div class="mt-4">
+                <label for="max" class="block text-sm font-medium">Max Value:</label>
+                <input id="max" type="number" bind:value={max} placeholder="Maximum value" class="w-full h-10 p-2 border border-gray-300 rounded-md" />
             </div>
         {/if}
 
         {#if newInputType === "select"}
             <div class="mt-4">
-                <label for="options" class="block text-sm font-medium"
-                    >Options (comma separated):</label
-                >
-                <input
-                    id="options"
-                    type="text"
-                    bind:value={options}
-                    placeholder="Option1, Option2, Option3"
-                    class="w-full mt-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-blue-200"
-                />
+                <label for="options" class="block text-sm font-medium">Options (comma-separated):</label>
+                <input id="options" type="text" bind:value={options} placeholder="Option 1, Option 2"
+                    class="w-full h-10 p-2 border border-gray-300 rounded-md" />
             </div>
         {/if}
 
-        <!-- Added Inputs Display -->
-        {#if (defaultInputs[widgetType] || []).length > 0 || inputs.length > 0}
-            <div class="mt-4">
-                <h3 class="text-sm font-semibold">Inputs:</h3>
-                <ul class="list-disc list-inside">
-                    {#each defaultInputs[widgetType] || [] as input}
-                        <li>
-                            {input.label} - {input.type}
-                            {#if input.type === "range"}
-                                (Min: {input.min} Max: {input.max})
-                            {/if}
-                            {#if input.type === "select"}
-                                (Options: {input.options})
-                            {/if}
-                        </li>
-                    {/each}
-                    {#each inputs as input, index}
-                        <li>
-                            {input.label} - {input.type}
-                            {#if input.type === "range"}
-                                (Min: {input.min} Max: {input.max})
-                            {/if}
-                            {#if input.type === "select"}
-                                (Options: {input.options})
-                            {/if}
-                            <button
-                                on:click={() => removeInput(index)}
-                                class="text-red-500 ml-2">Remove</button
-                            >
-                        </li>
-                    {/each}
-                </ul>
-            </div>
+        {#if inputs.length > 0 || (defaultInputs[widgetType] && defaultInputs[widgetType].length > 0)}
+            <h3 class="text-lg font-medium mt-4">Inputs</h3>
+            <ul class="list-disc list-inside">
+                {#each (defaultInputs[widgetType] || []) as defaultInput}
+                    <li>{defaultInput.label} ({defaultInput.type})</li>
+                {/each}
+                {#each inputs as input, index}
+                    <li>{input.label} ({input.type}) <button on:click={() => removeInput(index)} class="text-red-500 ml-2">Remove</button></li>
+                {/each}
+            </ul>
         {/if}
 
         <div class="mt-4">
-            <label for="color" class="block text-sm font-medium"
-                >Widget Color:</label
-            >
-            <input
-                id="color"
-                type="color"
-                bind:value={color}
-                class="mt-1 w-16 h-8 p-1"
-            />
+            <label for="color" class="block text-sm font-medium">Color:</label>
+            <input type="color" id="color" bind:value={color} class="h-10 w-full p-0 border border-gray-300 rounded-md" />
         </div>
 
-        <div class="flex justify-between mt-6">
-            <button
-                class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-                on:click={saveWidget}>Save Widget</button
-            >
-            <button
-                class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                on:click={resetForm}>Cancel</button
-            >
+        <div class="mt-4">
+            <label for="notes" class="block text-sm font-medium">Notes:</label>
+            <textarea id="notes" bind:value={notes} rows="3" placeholder="Enter any notes"
+                class="w-full p-2 border border-gray-300 rounded-md"></textarea>
         </div>
+    </div>
+
+    <div class="flex justify-end mt-6">
+        <button class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600" on:click={saveWidget}>
+            {currentWidgetIndex === null ? "Create Widget" : "Update Widget"}
+        </button>
     </div>
 </div>
